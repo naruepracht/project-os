@@ -1,0 +1,128 @@
+#include <stdio.h>
+#include <conio.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <assert.h>
+#define N 5;
+#define NUM_THREADS 1
+pthread_t tid[2]; 
+pthread_mutex_t lock; 
+int count=0;
+int front=0;int rear=0;
+char buffer[5];
+int prodsleep=0;int consleep=0;
+int b;
+void *perform_work(void *arguments){
+  scanf("%a",&b);
+  int index = *((int *)arguments);
+  printf("THREAD %d: Started.\n", index);
+
+}
+void add_items(void)
+{
+char item;
+if (count<5)//ถ้าcount <5 เข้าloop
+{
+printf("\n Enter Input Circular Buffer:");
+scanf(" %c",&item);//รับค่า char เก็บไว้ใน item
+buffer [front]=item;//buffer [front=0] = item
+front = (front+1)%5;//front มีค่า= (front+1)หาร5 เอาแต่เศษ
+count++;// count เพิ่มทีละ1
+if(consleep==1 && count==1)//ถ้าconsleep=1 และ count=1
+{
+printf("\n Consumer Wakeup ");
+}
+}
+else
+{
+printf("\n Buffer is Overflow");
+prodsleep=1;
+}
+}
+void remove_items(void)
+{
+char item;
+if (count>0)
+{
+item = buffer[rear];//item = buffer[rear=0]
+buffer[rear]=' ';
+printf("\n Remove_items: %c",item);
+rear=(rear+1)%5;
+count--;//count ลดทีละ1 
+if(prodsleep==1 && count==4)//ถ้าprodsleep=1 และ count=4
+{
+printf("\n No buffer overflow");//แสดงคำสั่ง No buffer overflow
+}
+}
+else
+{
+printf("\n No buffer underflow");
+consleep=1;
+}
+}
+void view(void)//ฟังก์ชั่น view 
+{
+int i;
+printf("\n Buffer Data : ");
+for(i=0;i<5;i++)//for เริ่มต้น i=0 ;เงื่อนไข i<5 ;iเพิ่มขึ้นทีละ1
+{
+printf("| %c ",buffer[i]);
+}
+}
+void Exit()//ฟังก์ชั่นexit 
+{
+
+	printf("THREAD 0: Ended.\n");
+}
+main()
+{
+int i,choice,flag=0;
+pthread_t threads[NUM_THREADS];
+int thread_args[NUM_THREADS];
+int g;
+int result_code;
+if (pthread_mutex_init(&lock, NULL) != 0) //ถ้า pthread mutex เก็บค่าไว้ในlock ไม่เท่ากับ0 
+{ 
+	printf("\n mutex init has failed\n"); 
+	return 1; 
+}
+	for (g = 0; g < NUM_THREADS; g++) {
+    printf("\nIN MAIN: Creating thread %d.\n", g);
+
+    thread_args[g] = g;
+    result_code = pthread_create(&threads[g], NULL, perform_work, &thread_args[g]);// ทำการสร้าง thread โดยเก็บไว้ในthreads[g] ตัวแทน attribute มีค่า =Null 
+    assert(!result_code);//เช็คค่าresult_code 
+  }
+    printf("IN MAIN: All threads are created.\n");
+ 
+printf("\n 1:Add_Items ");
+printf("\n 2:Remove_Items ");
+printf("\n 3:View buffer data ");
+printf("\n 4:Exit ");
+
+	pthread_join(tid[0], NULL); 
+	pthread_join(tid[1], NULL); 
+	pthread_mutex_destroy(&lock);
+	
+do
+{
+printf("\n\n Enter your choice :");
+scanf("%d",&choice);//รับค่า int เก็บไว้ในchoice 
+switch(choice)// เงื่อนไข switch ของchoice 
+{
+case 1:add_items();//เมื่อ ใส่ 1 ลงไป จะเข้าฟังก์ชั่น add_item
+	//wait for each thread to complete
+
+break;
+case 2:remove_items();
+break;
+case 3:view();
+break;
+case 4: Exit();
+printf("..............Exiting................");
+break;
+default:printf("\n Invalid Choice!");//เมื่อเงื่อนไขเป็นเท็จ แสดงคำว่า Invalid Choice!
+break;
+}
+}while(choice!=4);
+}
